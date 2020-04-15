@@ -5,3 +5,5 @@ notebook
 matplotlib
 tqdm
 scipy
+numpy
+freetype-py
