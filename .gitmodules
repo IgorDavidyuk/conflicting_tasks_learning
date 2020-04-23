@@ -1,0 +1,3 @@
+[submodule "dataset/fonts"]
+	path = dataset/fonts
+	url = https://github.com/google/fonts.git

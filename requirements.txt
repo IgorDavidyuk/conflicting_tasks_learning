@@ -7,3 +7,5 @@ tqdm
 scipy
 numpy
 freetype-py
+fontbakery
+pandas
