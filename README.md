@@ -1,1 +1,1 @@
-# conflicting_tasks_learning
+# Learning Multiple Conflicting Tasks 
