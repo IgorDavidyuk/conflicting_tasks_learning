@@ -2,8 +2,9 @@ from freetype import Face
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
+import math
 
-def render_character(free_type_face, pic_size, char):
+def render_character(free_type_face, char, pic_size=64):
     if not isinstance(free_type_face, Face):
         try: free_type_face = Face(free_type_face)
         except Exception as e:
@@ -14,7 +15,12 @@ def render_character(free_type_face, pic_size, char):
     pic_size = int(pic_size)
     # anti-aliasing
     free_type_face.set_pixel_sizes(3*pic_size, 0)
-    free_type_face.load_char(str(char)[0])
+    try:
+        free_type_face.load_char(str(char)[0])
+    except Exception as e:
+        print(f'failed to load character {char} from {str(free_type_face.family_name)}-{str(free_type_face.style_name)}')
+        print(f'Exception: {e}')
+        return None
     bitmap = free_type_face.glyph.bitmap
     img = np.array(bitmap.buffer).reshape(bitmap.rows,-1)
     h,w = img.shape
@@ -27,9 +33,9 @@ def render_character(free_type_face, pic_size, char):
         top = (w-h)//2
         bottom = w - h - top
         left, right = 0, 0
-    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT) # square
+    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT)
     # resize
-    return cv2.resize(img.astype('float32'), (pic_size,pic_size))
+    return cv2.resize(img.astype('float32'), (pic_size, pic_size))
 
 def visualize_set_of_chars(font_path, char_set, pic_size=64):
     '''
@@ -39,23 +45,23 @@ def visualize_set_of_chars(font_path, char_set, pic_size=64):
     pic_size - integer, width = height of 
     '''
     if not isinstance(char_set, str):
-        print(f'char_set variable should contain a tring, {type(char_set)} provided')
+        print(f'char_set variable should contain a string, {type(char_set)} provided')
     char_set = str(char_set)
     pic_size = int(pic_size)
     face = Face(font_path)
     
-    subplot_rows = 1 + len(char_set) // 10 
-    fig, axs = plt.subplots(subplot_rows, 10, figsize=(18,5))
+    subplot_rows = math.ceil(len(char_set) / 10)
+    _, axs = plt.subplots(subplot_rows, 10, figsize=(18,5))
     print(len(axs))
     for i in range(subplot_rows):
         for j in range(10):
             if 10*i + j < len(char_set):
                 char = char_set[10*i + j]
-                img = render_character(face, pic_size, char)
+                img = render_character(face, char, pic_size)
             else: 
-                continue
-                img = np.zeros((pic_size, pic_size))
+                continue        
             axs[i][j].imshow(img)
+        continue
     plt.tight_layout()
     plt.show()
 
