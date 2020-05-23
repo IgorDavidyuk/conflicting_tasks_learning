@@ -9,3 +9,5 @@ numpy
 freetype-py
 fontbakery
 pandas
+fork-futures
+pytorch-lightning
