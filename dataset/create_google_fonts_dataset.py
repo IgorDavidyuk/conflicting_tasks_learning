@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from fontbakery.utils import get_FamilyProto_Message
-from utils import render_character
+# from utils import render_character
 from freetype import Face
 import cv2
 import time
@@ -62,6 +62,40 @@ def parse_gf_metadata(ofl_path):
     return pd.DataFrame(parsed_metadata, columns=columns)
 
 
+def render_character(free_type_face, char, pic_size=64):
+    if not isinstance(free_type_face, Face):
+        try: free_type_face = Face(free_type_face)
+        except Exception as e:
+            print('not a FreeType face nor a path to .ttf file' +  
+                    'provided in variable free_type_face = {free_type_face}')
+            print(e)
+            return None
+    pic_size = int(pic_size)
+    # anti-aliasing
+    free_type_face.set_pixel_sizes(3*pic_size, 0)
+    try:
+        free_type_face.load_char(str(char)[0])
+    except Exception as e:
+        print(f'failed to load character {char} from {str(free_type_face.family_name)}-{str(free_type_face.style_name)}')
+        print(f'Exception: {e}')
+        return None
+    bitmap = free_type_face.glyph.bitmap
+    img = np.array(bitmap.buffer).reshape(bitmap.rows,-1)
+    h,w = img.shape
+    # pad glyph to square
+    if h >= w:
+        left = (h-w)//2
+        right = h - w - left
+        top, bottom = 0, 0
+    else:
+        top = (w-h)//2
+        bottom = w - h - top
+        left, right = 0, 0
+    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT)
+    # resize
+    return cv2.resize(img.astype('float32'), (pic_size, pic_size))
+
+
 def render_one_font(font_path, char_set, target_path, pic_size=64):
     full_name = font_path.split('/')[-1].split('.')[0]
     font_folder = os.path.join(target_path, full_name)
@@ -108,8 +142,10 @@ def save_rendered_glyphs_mt(gf_dataframe, char_set, target_path, pic_size=64):
 
 
 def save_rendered_glyphs_mp(gf_dataframe, char_set, target_path, pic_size=64):
-    import fork_futures as futures
-    from fork_futures import ForkPoolExecutor as ProcessPoolExecutor
+    # import fork_futures as futures
+    # from fork_futures import ForkPoolExecutor as ProcessPoolExecutor
+    from concurrent import futures, ProcessPoolExecutor
+
     os.makedirs(target_path, exist_ok=True)
 
     with ProcessPoolExecutor(max_workers=4) as executor:
@@ -134,6 +170,6 @@ if __name__ == "__main__":
     for char in 'OQMWIN':
         char_set = char_set.replace(char, '')
     
-    # marker = time.time()
-    save_rendered_glyphs(fonts_data, char_set, './rendered_set', 64)
-    # print('finished in', time.time()-marker, 'seconds')
+    marker = time.time()
+    save_rendered_glyphs_mp(fonts_data, char_set, './rendered_set', 64)
+    print('finished in', time.time()-marker, 'seconds')
