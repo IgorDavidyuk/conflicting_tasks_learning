@@ -144,7 +144,8 @@ def save_rendered_glyphs_mt(gf_dataframe, char_set, target_path, pic_size=64):
 def save_rendered_glyphs_mp(gf_dataframe, char_set, target_path, pic_size=64):
     # import fork_futures as futures
     # from fork_futures import ForkPoolExecutor as ProcessPoolExecutor
-    from concurrent import futures, ProcessPoolExecutor
+    from concurrent import futures, 
+    from concurrent.futures import ProcessPoolExecutor
 
     os.makedirs(target_path, exist_ok=True)
 
@@ -171,5 +172,5 @@ if __name__ == "__main__":
         char_set = char_set.replace(char, '')
     
     marker = time.time()
-    save_rendered_glyphs_mp(fonts_data, char_set, './rendered_set', 64)
+    save_rendered_glyphs(fonts_data, char_set, './rendered_set', 64)
     print('finished in', time.time()-marker, 'seconds')
