@@ -144,7 +144,7 @@ def save_rendered_glyphs_mt(gf_dataframe, char_set, target_path, pic_size=64):
 def save_rendered_glyphs_mp(gf_dataframe, char_set, target_path, pic_size=64):
     # import fork_futures as futures
     # from fork_futures import ForkPoolExecutor as ProcessPoolExecutor
-    from concurrent import futures, 
+    from concurrent import futures
     from concurrent.futures import ProcessPoolExecutor
 
     os.makedirs(target_path, exist_ok=True)
