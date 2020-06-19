@@ -1,14 +1,16 @@
 import os
 # import cv2
 from PIL import Image
+import numpy as np
 import torch
 from torch.utils.data import Dataset
+from torchvision import transforms
 from create_google_fonts_dataset import parse_gf_metadata, save_rendered_glyphs
 
 
 class CharClassificationDataset(Dataset):
 
-    def __init__(self, gf_dataframe, root_dir, charset, transform=None):
+    def __init__(self, gf_dataframe, root_dir, charset=None, img_size=64, transform=None):
         '''
         Args:
             gf_dataframe (pd.DataFrame): Info from parsed google fonts metadata files.
@@ -18,12 +20,33 @@ class CharClassificationDataset(Dataset):
                 on a sample.
         '''
         self.gf_dataframe = gf_dataframe
-        self.charset = str(charset)
         self.root_dir = root_dir
-        self.transform = transform
+        self.img_size = img_size
+
+        if charset is not None:
+            self.charset = str(charset)
+        else:
+            # construct letter set
+            capital_alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            char_set = capital_alphabet
+            for char in 'OQMWIN': # removing problematic symbols
+                char_set = char_set.replace(char, '')
+            self.charset = char_set
+        
         # render dataset if it is absent and check validity if it was rendered before
         self.render_fonts()
         self.font_names = list(map(self.split_path, self.gf_dataframe.path.values))
+
+        if transform is not None:
+            self.transform = transform
+        else:
+            self.transform = transforms.Compose([
+                    transforms.Resize((img_size, img_size)),
+                    transforms.ToTensor(),
+                    # we use 1 channel images
+                    transforms.Normalize(mean=[np.mean([0.485, 0.456, 0.406])],
+                                                std=[np.mean([0.229, 0.224, 0.225])]) 
+            ])        
 
     @staticmethod
     def split_path(path):
@@ -46,7 +69,8 @@ class CharClassificationDataset(Dataset):
                 except:
                     print(f'valid image {pic_address} is absent')
                     print(f'\ncreating dataset in {self.root_dir} directory\n')
-                    save_rendered_glyphs(self.gf_dataframe, self.charset, self.root_dir, pic_size=64)
+                    save_rendered_glyphs(self.gf_dataframe, self.charset, self.root_dir, \
+                            pic_size=self.img_size )
                     return
                 
 
