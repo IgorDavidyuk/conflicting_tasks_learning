@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 from torchvision import transforms
 import pytorch_lightning as pl
-sys.path.append('../')
+sys.path.insert(1, '../')
 from dataset.classification_dataset import CharClassificationDataset
 from dataset.create_google_fonts_dataset import parse_gf_metadata
 
@@ -49,7 +49,7 @@ class Classification_model(pl.LightningModule):
         # if we want to make test run on a fraction of the dataset
         #'''
         fonts_total = len(fonts_data)
-        fonts_data = fonts_data[:int(fonts_total/6)]
+        fonts_data = fonts_data[:int(fonts_total/4)]
         #'''
         # 6) fonts rendering itself is embedded into the dataset
         self.dataset = CharClassificationDataset(fonts_data, root_dir, \
